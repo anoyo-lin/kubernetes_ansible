@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gene-deployment
+  labels:
+    app: gene 
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: gene
+  template:
+    metadata:
+      labels:
+        app: gene
+    spec:
+      containers:
+      - name: digits-ocr
+        image: redacted:30002/library/gene-digits-ocr:0.0.1
+        ports:
+        - containerPort: 8000
+        volumeMounts:
+        - name: config-volume
+          mountPath: /app/gene/gene/settings.py
+          subPath: settings.py # only wants this file
+      imagePullSecrets:
+      - name: regcred
+      volumes:
+        - name: config-volume
+          configMap:
+            name: gene-django-settings
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: gene-service 
+  labels:
+    app: gene
+spec:
+  type: NodePort
+  ports:
+  - port: 8000
+    targetPort: 8000
+  selector:
+    app: gene
